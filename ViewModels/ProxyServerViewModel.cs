@@ -8,93 +8,99 @@ namespace ProxyServer.ViewModels
 {
     public class ProxyServerViewModel : ViewModelBase
     {
-        private Server _server;
+        private Server server;
 
-        private readonly CommandDelegate _startStopProxyCommand;
-        private readonly CommandDelegate _clearLog;
-        public ICommand StartStopProxyCommand => _startStopProxyCommand;
-        public ICommand ClearLogCommand => _clearLog;
+        private readonly CommandDelegate startStopProxyCommand;
+        private readonly CommandDelegate clearLog;
+        public ICommand StartStopProxyCommand => startStopProxyCommand;
+        public ICommand ClearLogCommand => clearLog;
 
         public ProxyServerViewModel()
         {
-            _server = new Server();
-            _startStopProxyCommand = new CommandDelegate(OnStartStopProxy, CanStartStopProxy);
-            _clearLog = new CommandDelegate(OnClearLog, CanClearLog);
+            server = new Server();
+            startStopProxyCommand = new CommandDelegate(OnStartStopProxy, CanStartStopProxy);
+            clearLog = new CommandDelegate(OnClearLog, CanClearLog);
         }
 
+        private bool CanStartStopProxy(object commandParameter) => true;
+        public void OnClearLog(object commandParameter) => server.ClearLog();
+        private bool CanClearLog(object commandParameter) => true;
 
         public bool IsRunning
         {
-            get => _server.IsRunning;
-            set => SetProperty(_server.IsRunning, value, () => _server.IsRunning = value);
+            get => server.running;
+            set => SetProperty(server.running, value, () => server.running = value);
         }
 
         public int ProxyPort
         {
-            get => _server.Port;
-            set => SetProperty(_server.Port, value, () => _server.Port = value);
+            get => server.port;
+            set => SetProperty(server.port, value, () => server.port = value);
         }
 
         public int ProxyCacheTimeOutInSeconds
         {
-            get => _server.CacheTimeOutInSeconds;
-            set => SetProperty(_server.CacheTimeOutInSeconds, value, () => _server.CacheTimeOutInSeconds = value);
+            get => server.cacheTimeOut;
+            set => SetProperty(server.cacheTimeOut, value, () => server.cacheTimeOut = value);
         }
 
         public int ProxyBufferSize
         {
-            get => _server.BufferSize;
-            set => SetProperty(_server.BufferSize, value, () => _server.BufferSize = value);
+            get => server.bufferSize;
+            set => SetProperty(server.bufferSize, value, () => server.bufferSize = value);
+        }
+
+        public bool ProxyServeFromCache
+        {
+            get => server.serveFromCache;
+            set => SetProperty(server.serveFromCache, value, () => server.serveFromCache = value);
         }
 
         public bool ProxyAuthenticationRequired
         {
-            get => _server.AuthenticationRequired;
-            set => SetProperty(_server.AuthenticationRequired, value, () => _server.AuthenticationRequired = value);
+            get => server.authRequired;
+            set => SetProperty(server.authRequired, value, () => server.authRequired = value);
         }
 
         public bool ProxyHideUserAgentEnabled
         {
-            get => _server.HideUserAgentEnabled;
-            set => SetProperty(_server.HideUserAgentEnabled, value, () => _server.HideUserAgentEnabled = value);
+            get => server.hideUserAgent;
+            set => SetProperty(server.hideUserAgent, value, () => server.hideUserAgent = value);
         }
 
         public bool ProxyFilterContentEnabled
         {
-            get => _server.FilterContentEnabled;
-            set => SetProperty(_server.FilterContentEnabled, value, () => _server.FilterContentEnabled = value);
+            get => server.filterContent;
+            set => SetProperty(server.filterContent, value, () => server.filterContent = value);
         }
 
         public bool ProxyLogRequest
         {
-            get => _server.LogRequest;
-            set => SetProperty(_server.LogRequest, value, () => _server.LogRequest = value);
+            get => server.logRequest;
+            set => SetProperty(server.logRequest, value, () => server.logRequest = value);
         }
 
         public bool ProxyLogResponse
         {
-            get => _server.LogResponse;
-            set => SetProperty(_server.LogResponse, value, () => _server.LogResponse = value);
+            get => server.logResponse;
+            set => SetProperty(server.logResponse, value, () => server.logResponse = value);
         }
 
         public ObservableCollection<ListBoxItem> Log
         {
-            get => _server.Log;
+            get => server.Log;
         }
 
         private async void OnStartStopProxy(object commandParameter)
         {
-            if (!_server.IsRunning)
+            if (!server.running)
             {
-                await Task.Run(() => _server.Start());
+                await Task.Run(() => server.Start());
             }
             else
             {
-                await Task.Run(() => _server.Stop());
+                await Task.Run(() => server.Stop());
             }
         }
-        private bool CanStartStopProxy(object commandParameter) => true;
-        public void OnClearLog(object commandParameter) => _server.ClearLog();
-        private bool CanClearLog(object commandParameter) => true;
     }
 }

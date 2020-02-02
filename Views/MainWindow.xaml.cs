@@ -1,19 +1,8 @@
 ﻿using ProxyServer.ViewModels;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Collections.Specialized;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace ProxyServer
 {
@@ -22,21 +11,26 @@ namespace ProxyServer
     /// </summary>
     public partial class MainWindow : Window
     {
-        private readonly ProxyServerViewModel _proxyServerViewModel;
+        private readonly ProxyServerViewModel proxyServerViewModel;
 
         public MainWindow()
         {
-            _proxyServerViewModel = new ProxyServerViewModel();
-            DataContext = _proxyServerViewModel;
+            proxyServerViewModel = new ProxyServerViewModel();
+            DataContext = proxyServerViewModel;
 
             InitializeComponent();
         }
 
-        // Validate input for numbers
-        public void CheckIfNumber(object sender, TextCompositionEventArgs textCompositionEventArgs)
+        public void isNumber(object sender, TextCompositionEventArgs textCompositionEventArgs)
         {
-            Regex isNumberRegex = new Regex("[^0-9]+");
-            textCompositionEventArgs.Handled = isNumberRegex.IsMatch(textCompositionEventArgs.Text);
+            Regex regex = new Regex("[^0-9]+");
+            textCompositionEventArgs.Handled = regex.IsMatch(textCompositionEventArgs.Text);
+        }
+
+        public void UpdateScrollBar(object sender, DependencyPropertyChangedEventArgs e)
+        {
+            var src = listBox.Items.SourceCollection as INotifyCollectionChanged;
+            src.CollectionChanged += (obj, args) => { listBox.Items.MoveCurrentToLast(); listBox.ScrollIntoView(listBox.Items.CurrentItem); };
         }
     }
 }

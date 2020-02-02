@@ -15,75 +15,73 @@ namespace ProxyServer.Proxy
 {
     public class Server
     {
-        private IPAddress _ipAddress;
-        private TcpListener _tcpListener;
-        private Cache _cacheHandler;
-        private Dispatcher _dispatcher = Dispatcher.CurrentDispatcher;
-        public bool IsRunning { get; set; }
-        public int Port { get; set; }
-        public int CacheTimeOutInSeconds { get; set; }
-        public int BufferSize { get; set; }
-        public bool AuthenticationRequired { get; set; }
-        public bool HideUserAgentEnabled { get; set; }
-        public bool FilterContentEnabled { get; set; }
-        public bool LogRequest { get; set; }
-        public bool LogResponse { get; set; }
-        public ObservableCollection<ListBoxItem> Log { get; set; }
+        public ObservableCollection<ListBoxItem> Log { get; set; } = new ObservableCollection<ListBoxItem>();
+        private IPAddress IP;
+        private TcpListener listener;
+        private Cache cache = new Cache();
+        private Dispatcher dispatcher = Dispatcher.CurrentDispatcher;
+
+        public bool running { get; set; } = false;
+        public int port { get; set; } = 8080;
+        public int cacheTimeOut { get; set; } = 300;
+        public int bufferSize { get; set; } = 1024;
+        public bool serveFromCache { get; set; } = false;
+        public bool authRequired { get; set; } = false;
+        public bool hideUserAgent { get; set; } = false;
+        public bool filterContent { get; set; } = false;
+        public bool logRequest { get; set; } = true;
+        public bool logResponse { get; set; } = true;
 
         public Server()
         {
-            IsRunning = false;
-            _ipAddress = IPAddress.Parse("127.0.0.1");
-            _cacheHandler = new Cache();
-            Port = 8080;
-            CacheTimeOutInSeconds = 300;
-            BufferSize = 1024;
-            AuthenticationRequired = false;
-            HideUserAgentEnabled = false;
-            FilterContentEnabled = false;
-            LogRequest = true;
-            LogResponse = true;
-            Log = new ObservableCollection<ListBoxItem>();
+            // Set IP to localhost
+            IP = IPAddress.Parse("127.0.0.1");
         }
 
+        // Start the Proxy
         public void Start()
         {
             try
             {
-                _tcpListener = new TcpListener(_ipAddress, Port);
-                _tcpListener.Start();
-                IsRunning = true;
+                listener = new TcpListener(IP, port);
+                listener.Start();
+                running = true;
                 Task.Run(() => ListenForIncomingClients());
-                AddToLog("STARTED PROXY!\r\n============");
+                AddToLog("===============\r\nPROXY IS LISTENING\r\n===============");
             }
             catch
             {
-                AddToLog("Could not start the Proxy!");
+                AddToLog("Error starting proxy!");
             }
         }
+
+        // Stop the Proxy
         public void Stop()
         {
             while (true)
             {
-                if (_tcpListener.Pending()) continue;
+                // Only terminate the Proxy when all requests have been handled
+                if (listener.Pending()) continue;
 
-                _tcpListener.Stop();
-                IsRunning = false;
-                AddToLog("============\r\nSTOPPED PROXY!");
+                listener.Stop();
+                running = false;
+                AddToLog("===============\r\nPROXY IS TERMINATED\r\n===============");
                 break;
             }
         }
 
+        // Listen for incoming connections
         private void ListenForIncomingClients()
         {
-            AddToLog("Waiting for new requests");
+            AddToLog("Listening for requests...");
 
-            while (IsRunning)
+            while (running)
             {
                 try
                 {
-                    TcpClient incomingClient = _tcpListener.AcceptTcpClient();
-                    Task.Run(() => HandleClient(incomingClient));
+                    // Set every connection on dedicated thread/task
+                    TcpClient client = listener.AcceptTcpClient();
+                    Task.Run(() => HandleClient(client));
                 }
                 catch (Exception exception)
                 {
@@ -92,91 +90,98 @@ namespace ProxyServer.Proxy
             }
         }
 
-        private async Task HandleClient(TcpClient incomingClient)
+        // Handle the connection request and response
+        private async Task HandleClient(TcpClient client)
         {
-            using (incomingClient)
-            using (NetworkStream incomingClientStream = incomingClient.GetStream())
+            using (client)
+            using (NetworkStream clientStream = client.GetStream())
             {
-                HttpRequest httpRequest = await ReceiveHttpRequest(incomingClientStream);
-                HttpResponse httpResponse = null;
+                HttpRequest request = await ReceiveHttpRequest(clientStream);
+                HttpResponse response = null;
 
-                if (httpRequest != null)
+                if (request != null)
                 {
-                    if (HideUserAgentEnabled) httpRequest.HideUserAgent();
-                    if (LogRequest) AddToLog($"\r\n==========Request Received==========\r\n{httpRequest.ToString}\r\n");
+                    if (hideUserAgent) request.HideUserAgent();
+                    if (logRequest) AddToLog($"\r\n========== REQUEST RECEIVED ==========\r\n{request.ToString}\r\n");
 
-                    // Check if authentication is not required or if the request is authenticated.
-                    if (!AuthenticationRequired || IsAuthenticated(httpRequest))
+                    // Check if auth is required, or if the request has been authenticated
+                    if (!authRequired || isAuthenticated(request))
                     {
-                        // Check if proxy needs to filter content.
-                        if (FilterContentEnabled && httpRequest.HasContentToFilter())
+                        // Check if we need to filter some content, and the content can be filtered
+                        if (filterContent && request.HasContentToFilter())
                         {
-                            httpResponse = HttpResponse.GetPlaceholderResponse();
-                            await incomingClientStream.WriteAsync(httpResponse.ToBytes, 0, httpResponse.ToBytes.Length);
+                            response = HttpResponse.GetSafePlaceholderImageResponse();
+                            await clientStream.WriteAsync(response.ToBytes, 0, response.ToBytes.Length);
                         }
 
-                        // Check if request is cacheable and is already stored in the cache.
-                        if (httpRequest.IsCacheable() && _cacheHandler.IsStoredInCache(httpRequest.FirstLine))
+                        // Check if we can cache the request and if we already have something ready in cache
+                        if (serveFromCache && request.IsCacheable() && cache.IsStoredInCache(request.FirstLine))
                         {
-                            CacheItem cacheItem = _cacheHandler.GetCacheItem(httpRequest.FirstLine);
+                            CacheItem cacheItem = cache.GetCacheItem(request.FirstLine);
 
                             // If cacheItem is still valid, return cacheItem as response.
-                            if (cacheItem.IsValid(CacheTimeOutInSeconds))
+                            if (cacheItem.IsValid(cacheTimeOut))
                             {
-                                httpResponse = cacheItem.Response;
-                                await incomingClientStream.WriteAsync(cacheItem.ResponseInBytes, 0, cacheItem.ResponseInBytes.Length);
+                                response = cacheItem.Response;
+                                await clientStream.WriteAsync(cacheItem.ResponseInBytes, 0, cacheItem.ResponseInBytes.Length);
+                                AddToLog($"\r\n========== SERVING '{request.FirstLine}' FROM CACHE, TTL: {Math.Round(cacheItem.RemainingTime(cacheTimeOut))} SECONDS ==========\r\n");
                             }
                             // If cacheItem is no longer valid, remove cacheItem from cache.
                             else
                             {
-                                _cacheHandler.RemoveCacheItem(httpRequest.FirstLine);
+                                cache.RemoveCacheItem(request.FirstLine);
                             }
                         }
 
-                        // If request is still 'null', the proxy needs to stream the response from the server.
-                        if (httpResponse == null)
+                        // Stream response from server if response is not yet sent
+                        if (response == null)
                         {
-                            httpResponse = await StreamHttpResponseFromServerToClient(httpRequest, incomingClientStream);
+                            response = await StreamHttpResponseFromServerToClient(request, clientStream);
 
-                            // If request is cacheable, store the response in cache.
-                            if (httpRequest.IsCacheable()) _cacheHandler.TryStoreInCache(httpRequest, httpResponse);
+                            // If request is cacheable, store the response in cache
+                            if (request.IsCacheable())
+                            {
+                                cache.StoreInCache(request, response);
+                                AddToLog($"\r\n========== '{request.FirstLine}' IS CACHED FOR FUTURE USE ==========\r\n");
+                            }
                         }
                     }
-                    // Request is not authenticated, send 407 response.
                     else
                     {
-                        httpResponse = HttpResponse.Get407Response();
-                        await incomingClientStream.WriteAsync(httpResponse.ToBytes, 0, httpResponse.ToBytes.Length);
+                        // Send 407 to client if we need authentication and are not authenticated yet
+                        response = HttpResponse.Return407();
+                        await clientStream.WriteAsync(response.ToBytes, 0, response.ToBytes.Length);
                     }
 
-                    if (httpResponse != null && LogResponse) AddToLog($"\r\n==========Response Sent==========\r\n{httpResponse.ToString}\r\n");
+                    if (response != null && logResponse) AddToLog($"\r\n========== RESPONSE SENT ==========\r\n{response.ToString}\r\n");
                 }
             }
         }
 
-        private async Task<HttpRequest> ReceiveHttpRequest(NetworkStream incomingClientStream)
+        // Handle incoming connection and parse to httprequest model
+        private async Task<HttpRequest> ReceiveHttpRequest(NetworkStream clientStream)
         {
             try
             {
                 using (MemoryStream memoryStream = new MemoryStream())
                 {
-                    byte[] requestBuffer = new byte[BufferSize];
+                    byte[] requestBuffer = new byte[bufferSize];
                     int bytesReceived;
 
-                    if (incomingClientStream.CanRead)
+                    if (clientStream.CanRead)
                     {
-                        if (incomingClientStream.DataAvailable)
+                        if (clientStream.DataAvailable)
                         {
                             do
                             {
-                                bytesReceived = await incomingClientStream.ReadAsync(requestBuffer, 0, requestBuffer.Length);
+                                bytesReceived = await clientStream.ReadAsync(requestBuffer, 0, requestBuffer.Length);
                                 await memoryStream.WriteAsync(requestBuffer, 0, bytesReceived);
-                            } while (incomingClientStream.DataAvailable);
+                            } while (clientStream.DataAvailable);
                         }
                     }
 
                     byte[] requestBytes = memoryStream.ToArray();
-                    HttpRequest httpRequest = HttpRequest.TryParse(requestBytes);
+                    HttpRequest httpRequest = HttpRequest.ParseToHTTPRequest(requestBytes);
 
                     return httpRequest;
                 }
@@ -187,29 +192,33 @@ namespace ProxyServer.Proxy
                 return null;
             }
         }
-        private async Task<HttpResponse> StreamHttpResponseFromServerToClient(HttpRequest httpRequest, NetworkStream incomingClientStream)
+
+        // Stream response from server to client
+        private async Task<HttpResponse> StreamHttpResponseFromServerToClient(HttpRequest request, NetworkStream stream)
         {
-            using (TcpClient clientToApproach = new TcpClient(httpRequest.GetHost(), 80))
-            using (NetworkStream clientToApproachStream = clientToApproach.GetStream())
+            using (TcpClient client = new TcpClient(request.GetHost(), 80))
+            using (NetworkStream clientStream = client.GetStream())
             {
-                await clientToApproachStream.WriteAsync(httpRequest.ToBytes, 0, httpRequest.ToBytes.Length);
+                await clientStream.WriteAsync(request.ToBytes, 0, request.ToBytes.Length);
 
                 using (MemoryStream memoryStream = new MemoryStream())
                 {
                     try
                     {
-                        byte[] responseBuffer = new byte[BufferSize];
+                        byte[] responseBuffer = new byte[bufferSize];
 
                         while (true)
                         {
-                            int bytesReceived = await clientToApproachStream.ReadAsync(responseBuffer, 0, responseBuffer.Length);
+                            int bytesReceived = await clientStream.ReadAsync(responseBuffer, 0, responseBuffer.Length);
+
                             if (bytesReceived == 0) break;
+
                             await memoryStream.WriteAsync(responseBuffer, 0, bytesReceived);
-                            await incomingClientStream.WriteAsync(responseBuffer, 0, bytesReceived);
+                            await stream.WriteAsync(responseBuffer, 0, bytesReceived);
                         }
 
                         byte[] responseBytes = memoryStream.ToArray();
-                        HttpResponse httpResponse = HttpResponse.TryParse(responseBytes);
+                        HttpResponse httpResponse = HttpResponse.ParseToHTTPResponse(responseBytes);
 
                         return httpResponse;
                     }
@@ -222,17 +231,19 @@ namespace ProxyServer.Proxy
             }
         }
 
-        private bool IsAuthenticated(HttpRequest httpRequest)
+        // Check if authenticated
+        private bool isAuthenticated(HttpRequest request)
         {
-            if (httpRequest.HasHeader("Admin"))
+            if (request.HasHeader("Proxy-Authorization"))
             {
-                HttpHeader adminHeader = httpRequest.GetHeader("Admin");
-                if (adminHeader.Key == adminHeader.Value) return true;
+                HttpHeader adminHeader = request.GetHeader("Proxy-Authorization");
+                if (adminHeader.Value == "admin") return true;
             }
 
             return false;
         }
-        private void AddToLog(string message) => _dispatcher.Invoke(() => Log.Add(new ListBoxItem { Content = message }));
+
+        private void AddToLog(string message) => dispatcher.Invoke(() => Log.Add(new ListBoxItem { Content = message }));
         public void ClearLog() => Log.Clear();
     }
 }

@@ -5,56 +5,102 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProxyServer"
         mc:Ignorable="d"
-        Title="MainWindow" Height="450" MaxHeight="450" Width="800" MaxWidth="800">
-    <Grid>
+        Title="MainWindow" Height="550" Width="950" MinHeight="550" MinWidth="950" MaxHeight="550" MaxWidth="950">
+
+    <Grid RenderTransformOrigin="0.497,0.557">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
-            <ColumnDefinition Width="100*"/>
-            <ColumnDefinition Width="325"/>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="300"/>
         </Grid.ColumnDefinitions>
-        <Grid Margin="10,10,10.143,9.714">
-            <Grid.RowDefinitions>
-                <RowDefinition Height="100*"/>
-                <RowDefinition Height="50"/>
-            </Grid.RowDefinitions>
-            <Grid Grid.Row="1" Margin="0,0,0,0.286">
+
+        <ListBox x:Name="listBox" ItemsSource="{Binding Log}" HorizontalAlignment="Left" Height="444" Margin="10,10,0,0" VerticalAlignment="Top" Width="525" Grid.Row="0" Grid.RowSpan="4" Grid.Column="0">
+            <ListBox.Effect>
+                <DropShadowEffect Color="#FFD4D4D4"/>
+            </ListBox.Effect>
+        </ListBox>
+        <StackPanel Grid.Row="0" Grid.RowSpan="8" Height="450" Margin="569,10,11,0" VerticalAlignment="Top" RenderTransformOrigin="0.5,0.5" Grid.ColumnSpan="2">
+            <StackPanel.RenderTransform>
+                <TransformGroup>
+                    <ScaleTransform/>
+                    <SkewTransform AngleX="0.185"/>
+                    <RotateTransform/>
+                    <TranslateTransform X="1.149"/>
+                </TransformGroup>
+            </StackPanel.RenderTransform>
+            <Grid Height="450">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="50*"/>
-                    <ColumnDefinition Width="50*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
                 </Grid.ColumnDefinitions>
-                <Button x:Name="ClearLogButton" Command="{Binding Path=ClearLogCommand}" Content="Clear log" Margin="10,10,10,10" Cursor="Hand"/>
+
+                <Button x:Name="StartStopButton" Command="{Binding Path=StartStopProxyCommand}" Grid.ColumnSpan="2" Content="Start/Stop Proxy" Height="48" Margin="10, 0, 10, 10" Cursor="Hand" Background="#FFAFD2F0">
+                    <Button.Effect>
+                        <DropShadowEffect Color="#FFD4D4D4"/>
+                    </Button.Effect>
+                </Button>
+
+                <TextBox x:Name="ProxyPort" PreviewTextInput="isNumber" Text="{Binding Path=ProxyPort}" Height="23" Grid.Row="1" Grid.Column="1" TextWrapping="Wrap" Margin="10" >
+                    <TextBox.Effect>
+                        <DropShadowEffect Color="#FFD4D4D4"/>
+                    </TextBox.Effect>
+                </TextBox>
+                <Label Content="Proxy Port" Width="Auto" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="1" Grid.Column="0" VerticalAlignment="Top" />
+
+                <TextBox x:Name="CacheTimeOutInSeconds" PreviewTextInput="isNumber" Text="{Binding Path=ProxyCacheTimeOutInSeconds}" Height="23" Grid.Row="2" Grid.Column="1" TextWrapping="Wrap" Margin="10" >
+                    <TextBox.Effect>
+                        <DropShadowEffect Color="#FFD4D4D4"/>
+                    </TextBox.Effect>
+                </TextBox>
+                <Label Content="Cache Timeout (s)" Width="Auto" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="2" Grid.Column="0" VerticalAlignment="Top" />
+
+                <TextBox  x:Name="BufferSize" PreviewTextInput="isNumber" Text="{Binding Path=ProxyBufferSize, Mode=TwoWay}" Height="23" Grid.Row="3" Grid.Column="1" TextWrapping="Wrap" Margin="10" >
+                    <TextBox.Effect>
+                        <DropShadowEffect Color="#FFD4D4D4"/>
+                    </TextBox.Effect>
+                </TextBox>
+                <Label Content="Buffer Size" Width="Auto" HorizontalAlignment="Left" Margin="10,10,0,0" Grid.Row="3" Grid.Column="0" VerticalAlignment="Top" />
+
+                <Label Content="Authentication Required" Width="Auto" HorizontalAlignment="Left" Margin="10, 5, 5, 10" Grid.Row="4" Grid.Column="0" VerticalAlignment="Center" />
+                <CheckBox x:Name="AuthenticationRequired" IsChecked="{Binding Path=ProxyAuthenticationRequired}" Grid.Column="1" Grid.Row="4" HorizontalAlignment="Right" Content="On/Off" Margin="10" VerticalAlignment="Center" Cursor="Hand" />
+
+                <Label Content="Serve Content From Cache" Width="Auto" HorizontalAlignment="Left" Margin="10, 5, 5, 10" Grid.Row="5" Grid.Column="0" VerticalAlignment="Center" />
+                <CheckBox x:Name="serveFromCache" IsChecked="{Binding Path=ProxyServeFromCache}" Grid.Column="1" Grid.Row="5" HorizontalAlignment="Right" Content="On/Off" Margin="10" VerticalAlignment="Center" Cursor="Hand" />
+
+                <Label Content="Hide 'User-Agent' Header" Width="Auto" HorizontalAlignment="Left" Margin="10, 5, 5, 10" Grid.Row="6" Grid.Column="0" VerticalAlignment="Center" />
+                <CheckBox  x:Name="HideUserAgent" IsChecked="{Binding Path=ProxyHideUserAgentEnabled}" Grid.Column="1" Grid.Row="6" HorizontalAlignment="Right" Content="On/Off" Margin="10" VerticalAlignment="Center" Cursor="Hand" />
+
+                <Label Content="Filter Content" Width="Auto" HorizontalAlignment="Left" Margin="10, 5, 5, 10" Grid.Row="7" Grid.Column="0" VerticalAlignment="Center" />
+                <CheckBox x:Name="FilterContent" IsChecked="{Binding Path=ProxyFilterContentEnabled}" Grid.Column="1" Grid.Row="7" HorizontalAlignment="Right" Content="On/Off" Margin="10" VerticalAlignment="Center" Cursor="Hand" />
+
+                <Label Content="Log Request Information" Width="Auto" HorizontalAlignment="Left" Margin="10, 5, 5, 10" Grid.Row="8" Grid.Column="0" VerticalAlignment="Center" />
+                <CheckBox x:Name="LogRequest" IsChecked="{Binding Path=ProxyLogRequest}" Grid.Column="1" Grid.Row="8" HorizontalAlignment="Right" Content="On/Off" Margin="10" VerticalAlignment="Center" Cursor="Hand" />
+
+                <Label Content="Log Response Information" Width="Auto" HorizontalAlignment="Left" Margin="10, 5, 5, 10" Grid.Row="9" Grid.Column="0" VerticalAlignment="Center" />
+                <CheckBox x:Name="LogResponse" IsChecked="{Binding Path=ProxyLogResponse}" Grid.Column="1" Grid.Row="9" HorizontalAlignment="Right" Content="On/Off" Margin="10" VerticalAlignment="Center" Cursor="Hand" />
             </Grid>
-            <ListBox x:Name="Log" ItemsSource="{Binding Log}" Margin="10,10,9.714,9.857"/>
-        </Grid>
-        <Grid Margin="0,10,10,9.429" Grid.Column="1">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="50*"/>
-                <ColumnDefinition Width="50*"/>
-            </Grid.ColumnDefinitions>
-            <Button x:Name="StartStopButton" Command="{Binding Path=StartStopProxyCommand}" Content="Start/Stop proxy" Grid.Column="1" Margin="10,10,10,0" VerticalAlignment="Top" Height="30" Cursor="Hand"/>
-
-            <Label Content="Proxy port" Margin="10,52,10,0" VerticalAlignment="Top" HorizontalContentAlignment="Right" FontSize="10"/>
-            <TextBox x:Name="ProxyPort" PreviewTextInput="CheckIfNumber" Text="{Binding Path=ProxyPort}" Grid.Column="1" Height="23" Margin="10,52,10,0" TextWrapping="Wrap" VerticalAlignment="Top" VerticalContentAlignment="Center" FontSize="10" Cursor="IBeam"/>
-
-            <Label Content="Cache time out in seconds" Margin="10,82,10,0" VerticalAlignment="Top" HorizontalContentAlignment="Right" FontSize="10"/>
-            <TextBox x:Name="CacheTimeOutInSeconds" PreviewTextInput="CheckIfNumber" Text="{Binding Path=ProxyCacheTimeOutInSeconds}" Grid.Column="1" Height="23" Margin="10,82,10,0" TextWrapping="Wrap" VerticalAlignment="Top" VerticalContentAlignment="Center" FontSize="10" Cursor="IBeam"/>
-
-            <Label Content="Buffer size" Margin="10,112,10,0" VerticalAlignment="Top" HorizontalContentAlignment="Right" FontSize="10"/>
-            <TextBox x:Name="BufferSize" PreviewTextInput="CheckIfNumber" Text="{Binding Path=ProxyBufferSize, Mode=TwoWay}" Grid.Column="1" Height="23" Margin="10.286,112,10.429,0" TextWrapping="Wrap" VerticalAlignment="Top" VerticalContentAlignment="Center" FontSize="10" Cursor="IBeam"/>
-
-            <Label Content="Require authentication" Margin="10,142,10,0" VerticalAlignment="Top" HorizontalContentAlignment="Right" FontSize="10"/>
-            <CheckBox x:Name="AuthenticationRequired" IsChecked="{Binding Path=ProxyAuthenticationRequired}" Content="" Grid.Column="1" HorizontalAlignment="Left" Margin="10,147,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" FontSize="10"/>
-
-            <Label Content='Hide "User-Agent"' Margin="10,172,10,0" VerticalAlignment="Top" HorizontalContentAlignment="Right" FontSize="10"/>
-            <CheckBox x:Name="HideUserAgent" IsChecked="{Binding Path=ProxyHideUserAgentEnabled}" Content="" Grid.Column="1" HorizontalAlignment="Left" Margin="10,177,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" FontSize="10"/>
-
-            <Label Content="Filter content" Margin="10,202,10,0" VerticalAlignment="Top" HorizontalContentAlignment="Right" FontSize="10"/>
-            <CheckBox x:Name="FilterContent" IsChecked="{Binding Path=ProxyFilterContentEnabled}" Content="" Grid.Column="1" HorizontalAlignment="Left" Margin="10,207,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" FontSize="10"/>
-
-            <Label Content="Log Request" Margin="10,232,10,0" VerticalAlignment="Top" HorizontalContentAlignment="Right" FontSize="10"/>
-            <CheckBox x:Name="LogRequest" IsChecked="{Binding Path=ProxyLogRequest}" Content="" Grid.Column="1" HorizontalAlignment="Left" Margin="10,237,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" FontSize="10"/>
-
-            <Label Content="Log Response" Margin="10,262,10,0" VerticalAlignment="Top" HorizontalContentAlignment="Right" FontSize="10"/>
-            <CheckBox x:Name="LogResponse" IsChecked="{Binding Path=ProxyLogResponse}" Content="" Grid.Column="1" HorizontalAlignment="Left" Margin="10,267,0,0" VerticalAlignment="Top" VerticalContentAlignment="Center" FontSize="10"/>
-        </Grid>
+        </StackPanel>
+        <Button x:Name="btnClearLog" Command="{Binding Path=ClearLogCommand, Mode=OneWay}"  Content="Clear Log" HorizontalAlignment="Left" Margin="10,83,0,0" VerticalAlignment="Top" Width="525" Height="36" Cursor="Hand" Background="#FFAFD2F0" Grid.Row="3">
+            <Button.Effect>
+                <DropShadowEffect Color="#FFD4D4D4"/>
+            </Button.Effect>
+        </Button>
     </Grid>
 </Window>

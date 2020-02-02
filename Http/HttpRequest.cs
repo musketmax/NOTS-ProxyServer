@@ -10,7 +10,7 @@ namespace ProxyServer.Http
     {
         public HttpRequest(string firstLine, List<HttpHeader> headers, byte[] body, byte[] requestInBytes) : base(firstLine, headers, body, requestInBytes) { }
 
-        public static HttpRequest TryParse(byte[] requestBytes)
+        public static HttpRequest ParseToHTTPRequest(byte[] requestBytes)
         {
             string requestString = Encoding.UTF8.GetString(requestBytes);
             List<string> requestLines = ToLines(requestString);
@@ -26,8 +26,7 @@ namespace ProxyServer.Http
 
         public void HideUserAgent()
         {
-            if (HasHeader("User-Agent"))
-                RemoveHeader("User-Agent");
+            if (HasHeader("User-Agent")) RemoveHeader("User-Agent");
         }
 
         public bool HasContentToFilter()
@@ -38,9 +37,10 @@ namespace ProxyServer.Http
 
         public bool IsCacheable()
         {
-            // If request isn't a GET request, request is not cacheable.
+            // Only cache if request is GET
             if (!FirstLine.Split(' ')[0].ToLower().Contains("get")) return false;
-            // If request has a 'Cache-Control: private' header, request is not cacheable.
+
+            // Only cache if request header 'Cache-Control' is not set to private
             if (HasHeader("Cache-Control") && GetHeader("Cache-Control").Value == "private") return false;
 
             return true;
@@ -49,7 +49,6 @@ namespace ProxyServer.Http
         public string GetHost()
         {
             if (HasHeader("Host")) return GetHeader("Host").Value;
-
             return FirstLine.Split(' ')[1];
         }
     }
