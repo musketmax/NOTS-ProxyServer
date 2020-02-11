@@ -96,12 +96,15 @@ namespace ProxyServer.Proxy
             using (client)
             using (NetworkStream clientStream = client.GetStream())
             {
+                // Retrieve the incoming request from client
                 HttpRequest request = await ReceiveHttpRequest(clientStream);
                 HttpResponse response = null;
 
                 if (request != null)
                 {
+                    // Hide the user agent if checked
                     if (hideUserAgent) request.HideUserAgent();
+
                     if (logRequest) AddToLog($"\r\n========== REQUEST RECEIVED ==========\r\n{request.ToString}\r\n");
 
                     // Check if auth is required, or if the request has been authenticated
@@ -115,7 +118,7 @@ namespace ProxyServer.Proxy
                         }
 
                         // Check if we can cache the request and if we already have something ready in cache
-                        if (serveFromCache && request.IsCacheable() && cache.IsStoredInCache(request.FirstLine))
+                        if (serveFromCache && request.IsCacheable() && cache.IsStored(request.FirstLine))
                         {
                             CacheItem cacheItem = cache.GetCacheItem(request.FirstLine);
 
@@ -141,7 +144,7 @@ namespace ProxyServer.Proxy
                             // If request is cacheable, store the response in cache
                             if (request.IsCacheable())
                             {
-                                cache.StoreInCache(request, response);
+                                cache.Store(request, response);
                                 AddToLog($"\r\n========== '{request.FirstLine}' IS CACHED FOR FUTURE USE ==========\r\n");
                             }
                         }
@@ -149,7 +152,7 @@ namespace ProxyServer.Proxy
                     else
                     {
                         // Send 407 to client if we need authentication and are not authenticated yet
-                        response = HttpResponse.Return407();
+                        response = HttpResponse.Return407NotAuthenticatedToProxy();
                         await clientStream.WriteAsync(response.ToBytes, 0, response.ToBytes.Length);
                     }
 
@@ -168,6 +171,7 @@ namespace ProxyServer.Proxy
                     byte[] requestBuffer = new byte[bufferSize];
                     int bytesReceived;
 
+                    // For as long as we can stream data from the client, fill our memorystream
                     if (clientStream.CanRead)
                     {
                         if (clientStream.DataAvailable)
@@ -180,6 +184,7 @@ namespace ProxyServer.Proxy
                         }
                     }
 
+                    // Fill byte array with streamed bytes from client, and parse the request so we can work with it
                     byte[] requestBytes = memoryStream.ToArray();
                     HttpRequest httpRequest = HttpRequest.ParseToHTTPRequest(requestBytes);
 

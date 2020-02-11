@@ -21,17 +21,17 @@ namespace ProxyServer.Http
             MessageInBytes = messageInBytes;
         }
 
-        public static List<string> ToLines(string messageString)
+        public static List<string> ToLines(string message)
         {
-            string[] lines = messageString.Split(
+            string[] result = message.Split(
                 new[] { "\r\n", "\r", "\n" },
                 StringSplitOptions.None
             );
 
-            return new List<string>(lines);
+            return new List<string>(result);
         }
 
-        protected static List<HttpHeader> ReadHeaders(List<string> messageLines)
+        protected static List<HttpHeader> GetHeaders(List<string> messageLines)
         {
             // Remove firstLine from messageLines
             messageLines.RemoveAt(0);
@@ -42,7 +42,7 @@ namespace ProxyServer.Http
                 if (line.Equals("")) break;
 
                 int seperator = line.IndexOf(":");
-                if (seperator == -1) continue;
+                if (seperator < 0) continue;
 
                 try
                 {
@@ -74,7 +74,7 @@ namespace ProxyServer.Http
         public void AddHeader(string key, string value) => Headers.Add(new HttpHeader(key, value));
         public void RemoveHeader(string key) => Headers.Remove(GetHeader(key));
 
-        protected static byte[] ReadBody(string messageString)
+        protected static byte[] GetBody(string messageString)
         {
             string[] bodyStringArray = messageString.Split(
                 new[] { "\r\n\r\n" },

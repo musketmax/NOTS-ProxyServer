@@ -31,13 +31,13 @@ namespace ProxyServer.Proxy
             storedItems.TryRemove(requestLine, out cacheItem);
         }
 
-        public bool IsStoredInCache(string requestLine)
+        public bool IsStored(string requestLine)
         {
             CacheItem cacheItem = GetCacheItem(requestLine);
             return cacheItem != null;
         }
 
-        public void StoreInCache(HttpRequest request, HttpResponse response)
+        public void Store(HttpRequest request, HttpResponse response)
         {
             // Only store in cache when there is no cacheItem already for this requestLine.
             if (GetCacheItem(request.FirstLine) == null)

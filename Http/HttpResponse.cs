@@ -15,15 +15,15 @@ namespace ProxyServer.Http
             List<string> responseLines = ToLines(responseString);
 
             string firstLine = responseLines[0];
-            List<HttpHeader> headers = ReadHeaders(responseLines);
-            byte[] body = ReadBody(responseString);
+            List<HttpHeader> headers = GetHeaders(responseLines);
+            byte[] body = GetBody(responseString);
 
             if (headers.Count() > 0) return new HttpResponse(firstLine, headers, body, responseBytes);
 
             return null;
         }
 
-        public static HttpResponse Return407()
+        public static HttpResponse Return407NotAuthenticatedToProxy()
         {
             string firstLine = "HTTP/1.1 407 Proxy Authentication Required";
 
@@ -34,7 +34,7 @@ namespace ProxyServer.Http
                 new HttpHeader("Date", DateTime.Now.ToUniversalTime().ToString("r"))
             };
 
-            byte[] body = Encoding.UTF8.GetBytes("<html><h1>The server understood the request but refuses to authorize it. Please authorize and try again.</h1></html>");
+            byte[] body = Encoding.UTF8.GetBytes("<html><body><h1>The server understood the request but refuses to authorize it. Please authorize and try again.</h1></body></html>");
 
             return new HttpResponse(firstLine, headers, body, new byte[0]);
         }

@@ -11,36 +11,36 @@ namespace ProxyServer.Proxy
     {
         public HttpResponse Response { get; }
         public byte[] ResponseInBytes { get; }
-        public DateTime CachedDate { get; }
-        public int MaxAge;
+        public DateTime DateCached { get; }
+        public int MaximumAge;
 
         public CacheItem(HttpRequest request, HttpResponse response)
         {
             Response = response;
             ResponseInBytes = response.MessageInBytes;
-            CachedDate = DateTime.UtcNow;
-            MaxAge = 0;
+            DateCached = DateTime.UtcNow;
+            MaximumAge = 0;
 
-            // If request has MaxAge header, set MaxAge to this value.
+            // If request has a Cache-Control header, set our max age to it
             if (request.HasHeader("Cache-Control") && request.GetHeader("Cache-Control").Value.Contains("max-age="))
             {
-                int.TryParse(request.GetHeader("Cache-Control").Value.Split('=')[1], out MaxAge);
+                int.TryParse(request.GetHeader("Cache-Control").Value.Split('=')[1], out MaximumAge);
             }
-        }
-
-        public bool IsValid(int cacheTimeOut)
-        {
-            if (MaxAge > 0)
-            {
-                return ((DateTime.UtcNow - CachedDate).TotalSeconds <= MaxAge && (DateTime.UtcNow - CachedDate).TotalSeconds <= cacheTimeOut);
-            }
-
-            return (DateTime.UtcNow - CachedDate).TotalSeconds <= cacheTimeOut;
         }
 
         public double RemainingTime(int cacheTimeOut)
         {
-            return cacheTimeOut - (DateTime.UtcNow - CachedDate).TotalSeconds;
+            return cacheTimeOut - (DateTime.UtcNow - DateCached).TotalSeconds;
+        }
+
+        public bool IsValid(int cacheTimeOut)
+        {
+            if (MaximumAge > 0)
+            {
+                return ((DateTime.UtcNow - DateCached).TotalSeconds <= MaximumAge && (DateTime.UtcNow - DateCached).TotalSeconds <= cacheTimeOut);
+            }
+
+            return (DateTime.UtcNow - DateCached).TotalSeconds <= cacheTimeOut;
         }
 
         public HttpResponse ToResponse

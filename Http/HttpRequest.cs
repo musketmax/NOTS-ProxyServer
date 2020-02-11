@@ -16,8 +16,8 @@ namespace ProxyServer.Http
             List<string> requestLines = ToLines(requestString);
 
             string firstLine = requestLines[0];
-            List<HttpHeader> headers = ReadHeaders(requestLines);
-            byte[] body = ReadBody(requestString);
+            List<HttpHeader> headers = GetHeaders(requestLines);
+            byte[] body = GetBody(requestString);
 
             if (headers.Count() > 0) return new HttpRequest(firstLine, headers, body, requestBytes);
 
