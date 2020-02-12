@@ -71,7 +71,7 @@ namespace ProxyServer.Proxy
         }
 
         // Listen for incoming connections
-        private void ListenForIncomingClients()
+        private async Task ListenForIncomingClients()
         {
             AddToLog("Listening for requests...");
 
@@ -80,8 +80,8 @@ namespace ProxyServer.Proxy
                 try
                 {
                     // Set every connection on dedicated thread/task
-                    TcpClient client = listener.AcceptTcpClient();
-                    Task.Run(() => HandleClient(client));
+                    TcpClient client = await listener.AcceptTcpClientAsync();
+                    await Task.Run(() => HandleClient(client));
                 }
                 catch (Exception exception)
                 {
