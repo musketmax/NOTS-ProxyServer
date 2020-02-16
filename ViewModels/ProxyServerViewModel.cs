@@ -1,106 +1,122 @@
-﻿using System.Collections.ObjectModel;
+﻿using ProxyServer_NOTS.Proxy;
+using System.Collections.ObjectModel;
 using System.Threading.Tasks;
 using System.Windows.Controls;
 using System.Windows.Input;
-using ProxyServer.Proxy;
 
-namespace ProxyServer.ViewModels
+namespace ProxyServer_NOTS.ViewModels
 {
     public class ProxyServerViewModel : ViewModelBase
     {
-        private Server server;
+        private ProxyServer proxyServer;
 
-        private readonly CommandDelegate startStopProxyCommand;
+        private readonly CommandDelegate startStopProxy;
         private readonly CommandDelegate clearLog;
-        public ICommand StartStopProxyCommand => startStopProxyCommand;
-        public ICommand ClearLogCommand => clearLog;
+        private readonly CommandDelegate clearCache;
+        public ICommand startStopProxyCommand => startStopProxy;
+        public ICommand clearLogCommand => clearLog;
+        public ICommand clearCacheCommand => clearCache;
 
         public ProxyServerViewModel()
         {
-            server = new Server();
-            startStopProxyCommand = new CommandDelegate(OnStartStopProxy, CanStartStopProxy);
-            clearLog = new CommandDelegate(OnClearLog, CanClearLog);
+            proxyServer = new ProxyServer();
+            startStopProxy = new CommandDelegate(onStartStopProxy, canStartStopProxy);
+            clearLog = new CommandDelegate(onClearLog, canClearLog);
+            clearCache = new CommandDelegate(onClearCache, canClearCache);
         }
 
-        private bool CanStartStopProxy(object commandParameter) => true;
-        public void OnClearLog(object commandParameter) => server.ClearLog();
-        private bool CanClearLog(object commandParameter) => true;
+        private bool canStartStopProxy(object commandParameter) => true;
+        private bool canClearLog(object commandParameter) => true;
+        private bool canClearCache(object commandParameter) => true;
 
-        public bool IsRunning
-        {
-            get => server.running;
-            set => SetProperty(server.running, value, () => server.running = value);
-        }
+        public void onClearLog(object commandParameter) => proxyServer.clearLog();
+        public void onClearCache(object commandParameter) => proxyServer.clearCache();
 
-        public int ProxyPort
+        private async void onStartStopProxy(object commandParameter)
         {
-            get => server.port;
-            set => SetProperty(server.port, value, () => server.port = value);
-        }
-
-        public int ProxyCacheTimeOutInSeconds
-        {
-            get => server.cacheTimeOut;
-            set => SetProperty(server.cacheTimeOut, value, () => server.cacheTimeOut = value);
-        }
-
-        public int ProxyBufferSize
-        {
-            get => server.bufferSize;
-            set => SetProperty(server.bufferSize, value, () => server.bufferSize = value);
-        }
-
-        public bool ProxyServeFromCache
-        {
-            get => server.serveFromCache;
-            set => SetProperty(server.serveFromCache, value, () => server.serveFromCache = value);
-        }
-
-        public bool ProxyAuthenticationRequired
-        {
-            get => server.authRequired;
-            set => SetProperty(server.authRequired, value, () => server.authRequired = value);
-        }
-
-        public bool ProxyHideUserAgentEnabled
-        {
-            get => server.hideUserAgent;
-            set => SetProperty(server.hideUserAgent, value, () => server.hideUserAgent = value);
-        }
-
-        public bool ProxyFilterContentEnabled
-        {
-            get => server.filterContent;
-            set => SetProperty(server.filterContent, value, () => server.filterContent = value);
-        }
-
-        public bool ProxyLogRequest
-        {
-            get => server.logRequest;
-            set => SetProperty(server.logRequest, value, () => server.logRequest = value);
-        }
-
-        public bool ProxyLogResponse
-        {
-            get => server.logResponse;
-            set => SetProperty(server.logResponse, value, () => server.logResponse = value);
-        }
-
-        public ObservableCollection<ListBoxItem> Log
-        {
-            get => server.Log;
-        }
-
-        private async void OnStartStopProxy(object commandParameter)
-        {
-            if (!server.running)
+            if (!proxyServer.running)
             {
-                await Task.Run(() => server.Start());
+                await Task.Run(() => proxyServer.start());
             }
             else
             {
-                await Task.Run(() => server.Stop());
+                await Task.Run(() => proxyServer.stop());
             }
+        }
+
+        public bool isRunning
+        {
+            get => proxyServer.running;
+            set => SetProperty(proxyServer.running, value, () => proxyServer.running = value);
+        }
+
+        public string startStopButtonText
+        {
+            get => proxyServer.startStopButtonText;
+        }
+
+        public int proxyPort
+        {
+            get => proxyServer.port;
+            set => SetProperty(proxyServer.port, value, () => proxyServer.port = value);
+        }
+
+        public int proxyCacheTimeOutInSeconds
+        {
+            get => proxyServer.cacheTimeOut;
+            set => SetProperty(proxyServer.cacheTimeOut, value, () => proxyServer.cacheTimeOut = value);
+        }
+
+        public int proxyBufferSize
+        {
+            get => proxyServer.bufferSize;
+            set => SetProperty(proxyServer.bufferSize, value, () => proxyServer.bufferSize = value);
+        }
+
+        public bool proxyServeFromCache
+        {
+            get => proxyServer.serveFromCache;
+            set => SetProperty(proxyServer.serveFromCache, value, () => proxyServer.serveFromCache = value);
+        }
+
+        public bool proxyAuthenticationRequired
+        {
+            get => proxyServer.authRequired;
+            set => SetProperty(proxyServer.authRequired, value, () => proxyServer.authRequired = value);
+        }
+
+        public bool proxyHideUserAgentEnabled
+        {
+            get => proxyServer.hideUserAgent;
+            set => SetProperty(proxyServer.hideUserAgent, value, () => proxyServer.hideUserAgent = value);
+        }
+
+        public bool proxyFilterContentEnabled
+        {
+            get => proxyServer.filterContent;
+            set => SetProperty(proxyServer.filterContent, value, () => proxyServer.filterContent = value);
+        }
+
+        public bool proxyLogRequest
+        {
+            get => proxyServer.logRequest;
+            set => SetProperty(proxyServer.logRequest, value, () => proxyServer.logRequest = value);
+        }
+
+        public bool proxyLogResponse
+        {
+            get => proxyServer.logResponse;
+            set => SetProperty(proxyServer.logResponse, value, () => proxyServer.logResponse = value);
+        }
+
+        public ObservableCollection<ListBoxItem> log
+        {
+            get => proxyServer.log;
+        }
+
+        public ObservableCollection<ListBoxItem> cacheItems
+        {
+            get => proxyServer.cacheItems;
         }
     }
 }

@@ -1,10 +1,9 @@
-﻿using ProxyServer.ViewModels;
-using System.Collections.Specialized;
+﻿using ProxyServer_NOTS.ViewModels;
 using System.Text.RegularExpressions;
 using System.Windows;
 using System.Windows.Input;
 
-namespace ProxyServer
+namespace ProxyServer_NOTS
 {
     /// <summary>
     /// Interaction logic for MainWindow.xaml
@@ -25,12 +24,6 @@ namespace ProxyServer
         {
             Regex regex = new Regex("[^0-9]+");
             textCompositionEventArgs.Handled = regex.IsMatch(textCompositionEventArgs.Text);
-        }
-
-        public void UpdateScrollBar(object sender, DependencyPropertyChangedEventArgs e)
-        {
-            var src = listBox.Items.SourceCollection as INotifyCollectionChanged;
-            src.CollectionChanged += (obj, args) => { listBox.Items.MoveCurrentToLast(); listBox.ScrollIntoView(listBox.Items.CurrentItem); };
         }
     }
 }

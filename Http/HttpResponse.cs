@@ -3,22 +3,23 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ProxyServer.Http
+namespace ProxyServer_NOTS.Http
 {
     public class HttpResponse : HttpMessage
     {
         public HttpResponse(string firstLine, List<HttpHeader> headers, byte[] body, byte[] responseInBytes) : base(firstLine, headers, body, responseInBytes) { }
 
-        public static HttpResponse ParseToHTTPResponse(byte[] responseBytes)
+        public static HttpResponse parseToHTTPResponse(byte[] responseInBytes)
         {
-            string responseString = Encoding.UTF8.GetString(responseBytes);
-            List<string> responseLines = ToLines(responseString);
+            string messageInString = Encoding.UTF8.GetString(responseInBytes);
+            List<string> lines = toLines(messageInString);
 
-            string firstLine = responseLines[0];
-            List<HttpHeader> headers = GetHeaders(responseLines);
-            byte[] body = GetBody(responseString);
+            string firstLine = lines[0];
 
-            if (headers.Count() > 0) return new HttpResponse(firstLine, headers, body, responseBytes);
+            List<HttpHeader> headers = getHeaders(lines);
+            byte[] body = getBody(messageInString);
+
+            if (headers.Count() > 0) return new HttpResponse(firstLine, headers, body, responseInBytes);
 
             return null;
         }
@@ -39,9 +40,10 @@ namespace ProxyServer.Http
             return new HttpResponse(firstLine, headers, body, new byte[0]);
         }
 
-        public static HttpResponse GetSafePlaceholderImageResponse()
+        public static HttpResponse getSafePlaceholderImageResponse()
         {
             string firstLine = "HTTP/1.1 200 Ok";
+
             List<HttpHeader> headers = new List<HttpHeader>
             {
                 new HttpHeader("Connection", "close"),

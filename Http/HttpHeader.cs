@@ -1,25 +1,25 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
-namespace ProxyServer.Http
+namespace ProxyServer_NOTS.Http
 {
     public class HttpHeader
     {
-        public string Key { get; set; }
-        public string Value { get; set; }
+        public string key { get; set; }
+        public string value { get; set; }
 
         public HttpHeader(string key, string value)
         {
-            Key = key;
-            Value = value;
+            this.key = key;
+            this.value = value;
+
+            Console.WriteLine(this.key);
         }
 
         public new string ToString
         {
-            get => $"{Key}: {Value}";
+            get => $"{key}: {value}";
         }
     }
 }
