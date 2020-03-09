@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProxyServer_NOTS"
         mc:Ignorable="d"
-        Title="MainWindow" Height="750" Width="950" MinHeight="750" MinWidth="950" MaxHeight="750" MaxWidth="950">
+        Title="Nots-ProxyServer Thomas Brandhorst" Height="750" Width="950" MinHeight="750" MinWidth="950" MaxHeight="750" MaxWidth="950">
     <Grid RenderTransformOrigin="0.497,0.557">
         <Grid.RowDefinitions>
             <RowDefinition Height="*"/>
