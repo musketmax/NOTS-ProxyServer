@@ -95,7 +95,7 @@ namespace ProxyServer_NOTS.Proxy
                 {
                     // Set every connection on dedicated thread/task
                     TcpClient client = await listener.AcceptTcpClientAsync();
-                    await Task.Run(() => handleIncomingConnection(client));
+                    Task.Run(() => handleIncomingConnection(client));
                 }
                 catch (Exception exception)
                 {
@@ -250,20 +250,21 @@ namespace ProxyServer_NOTS.Proxy
                     try
                     {
                         byte[] buffer = new byte[bufferSize];
+                        int bytesReceived;
                         await hostStream.WriteAsync(request.toBytes, 0, request.toBytes.Length);
 
-                        while (true && !stopping)
+                        if (hostStream.CanRead)
                         {
-                            int bytesRead = await hostStream.ReadAsync(buffer, 0, buffer.Length);
-                            System.Diagnostics.Debug.WriteLine(bytesRead);
-
-                            if (bytesRead == 0) break;
-
-                            await connectionStream.WriteAsync(buffer, 0, bytesRead);
-                            await memoryStream.WriteAsync(buffer, 0, bytesRead);
+                            do
+                            {
+                                bytesReceived = await hostStream.ReadAsync(buffer, 0, buffer.Length);
+                                await connectionStream.WriteAsync(buffer, 0, bytesReceived);
+                                memoryStream.Write(buffer, 0, bytesReceived);
+                            } while (hostStream.CanRead && !stopping && bytesReceived > 0);
                         }
 
                         byte[] responseBytes = memoryStream.GetBuffer();
+
                         HttpResponse httpResponse = HttpResponse.parseToHTTPResponse(responseBytes);
 
                         return httpResponse;
