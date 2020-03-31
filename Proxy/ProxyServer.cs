@@ -20,7 +20,7 @@ namespace ProxyServer_NOTS.Proxy
         public bool running { get; set; } = false;
         public bool stopping { get; set; } = false;
         public int port { get; set; } = 8080;
-        public int cacheTimeOut { get; set; } = 300;
+        public int cacheTimeOut { get; set; } = 600;
         public int bufferSize { get; set; } = 4096;
         public bool serveFromCache { get; set; } = false;
         public bool authRequired { get; set; } = false;
